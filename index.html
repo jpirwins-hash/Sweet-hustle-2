@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v5.4</title>
+  <title>Sweet Hustle v5.5</title>
 
   <style>
     body {
@@ -18,13 +18,38 @@
       max-width: 420px;
     }
 
+    /* ================= HUD ================= */
+
     .header {
       position: sticky;
       top: 0;
       background: rgba(255,255,255,0.08);
       backdrop-filter: blur(10px);
-      padding: 14px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
+
+    .hud-line {
+      font-size: 13px;
+      margin: 2px 0;
+    }
+
+    .xp-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .xp-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+    }
+
+    /* ================= BOX ================= */
 
     .box {
       background: rgba(255,255,255,0.06);
@@ -52,9 +77,24 @@
 
 <div class="game">
 
+  <!-- ================= HUD ================= -->
   <div class="header">
-    💰 £<span id="money"></span> |
-    📍 <span id="location"></span>
+
+    <div class="hud-line">
+      💰 £<span id="money"></span> |
+      📅 Day <span id="day"></span> |
+      📍 <span id="location"></span>
+    </div>
+
+    <div class="hud-line">
+      🏆 <span id="rank"></span> |
+      ⭐ Level <span id="level"></span>
+    </div>
+
+    <div class="xp-bar">
+      <div class="xp-fill" id="xpFill"></div>
+    </div>
+
   </div>
 
   <!-- HOME -->
@@ -105,32 +145,19 @@
 
 <script>
 
-/* ================= SOUND SYSTEM ================= */
-
-const sounds = {
-  buy: new Audio("https://actions.google.com/sounds/v1/cash_register/coins.wav"),
-  sell: new Audio("https://actions.google.com/sounds/v1/cash_register/cash_register_01.mp3"),
-  mission: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"),
-  error: new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg")
-};
-
-function playSound(type){
-
-  if(!sounds[type]) return;
-
-  sounds[type].currentTime = 0;
-  sounds[type].play().catch(()=>{});
-}
-
 /* ================= STATE ================= */
 
 let money = 100;
 let locationName = "Home";
 
+let level = 1;
+let xp = 0;
+let xpNeeded = 20;
+
 let inventory = {};
 let missions = {};
 
-/* ================= INIT / LOAD ================= */
+/* ================= INIT ================= */
 
 function initGame(){
 
@@ -138,10 +165,16 @@ function initGame(){
 
   if(saved){
     let data = JSON.parse(saved);
+
     money = data.money;
     locationName = data.locationName;
     inventory = data.inventory;
     missions = data.missions;
+
+    level = data.level;
+    xp = data.xp;
+    xpNeeded = data.xpNeeded;
+
   } else {
 
     inventory = {
@@ -169,11 +202,29 @@ function saveGame(){
     money,
     locationName,
     inventory,
-    missions
+    missions,
+    level,
+    xp,
+    xpNeeded
   }));
 }
 
-/* ================= SCREEN SYSTEM ================= */
+/* ================= XP SYSTEM ================= */
+
+function addXP(amount){
+
+  xp += amount;
+
+  if(xp >= xpNeeded){
+    xp -= xpNeeded;
+    level++;
+    xpNeeded = Math.floor(xpNeeded * 1.3);
+
+    money += 50; // level up reward
+  }
+}
+
+/* ================= SCREEN ================= */
 
 function show(screen){
   hideAll();
@@ -197,7 +248,7 @@ function hideAll(){
   });
 }
 
-/* ================= SELL + MISSIONS ================= */
+/* ================= SELL ================= */
 
 function sell(item){
 
@@ -205,27 +256,32 @@ function sell(item){
 
   money += 10;
 
-  playSound("sell");
+  addXP(5);
 
   if(missions[item]){
-
     missions[item].progress++;
 
     if(missions[item].progress >= missions[item].target){
-
       money += missions[item].reward;
 
       missions[item].target += 2;
       missions[item].progress = 0;
       missions[item].reward += 25;
 
-      playSound("mission");
       alert("🎯 Mission Complete: " + item.toUpperCase());
     }
   }
 
   updateUI();
   saveGame();
+}
+
+/* ================= RANK ================= */
+
+function getRank(){
+  if(level >= 10) return "Candy King";
+  if(level >= 5) return "Sweet Dealer";
+  return "Street Hustler";
 }
 
 /* ================= UI ================= */
@@ -249,8 +305,16 @@ function updateMissions(){
 }
 
 function updateUI(){
+
   document.getElementById("money").innerText = money;
   document.getElementById("location").innerText = locationName;
+
+  document.getElementById("level").innerText = level;
+  document.getElementById("rank").innerText = getRank();
+
+  let percent = (xp / xpNeeded) * 100;
+  document.getElementById("xpFill").style.width = percent + "%";
+
   updateMissions();
 }
 
