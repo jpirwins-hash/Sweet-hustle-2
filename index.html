@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sweet Hustle v3</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #fff0f5;
+      text-align: center;
+      padding: 10px;
+    }
+    .box {
+      background: white;
+      padding: 12px;
+      margin: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #ddd;
+    }
+    button {
+      padding: 10px;
+      margin: 4px;
+      border: none;
+      border-radius: 8px;
+      background: #ff4da6;
+      color: white;
+    }
+    .danger { background: #ff3b3b; }
+    .good { background: #2ecc71; }
+  </style>
+</head>
+
+<body>
+
+<h2>🍭 Sweet Hustle v3</h2>
+
+<div class="box">
+  💰 Money: £<span id="money"></span><br>
+  📅 Day: <span id="day"></span><br>
+  📍 Location: <span id="location"></span><br>
+  🏆 Status: <span id="status"></span>
+</div>
+
+<div class="box">
+  <button onclick="travel('School')">🏫 School</button>
+  <button onclick="travel('City')">🏙️ City</button>
+  <button onclick="travel('Shop')">🏪 Shop</button>
+  <button onclick="travel('Festival')">🎡 Festival</button>
+</div>
+
+<div class="box">
+  <h3>🍬 Prices</h3>
+  🍫 Chocolate: £<span id="choc"></span><br>
+  🍬 Gummies: £<span id="gum"></span><br>
+  🍭 Lollipops: £<span id="lol"></span>
+</div>
+
+<div class="box">
+  <h3>Buy / Sell</h3>
+
+  <button onclick="buy('choc')">Buy 🍫</button>
+  <button onclick="sell('choc')">Sell 🍫</button><br>
+
+  <button onclick="buy('gum')">Buy 🍬</button>
+  <button onclick="sell('gum')">Sell 🍬</button><br>
+
+  <button onclick="buy('lol')">Buy 🍭</button>
+  <button onclick="sell('lol')">Sell 🍭</button>
+</div>
+
+<div class="box">
+  <button onclick="nextDay()" class="good">➡️ Next Day</button>
+</div>
+
+<div class="box">
+  <button onclick="resetGame()" class="danger">🔄 Reset Game</button>
+</div>
+
+<script>
+
+let money = 100;
+let day = 1;
+let locationName = "School";
+
+let inventory = { choc: 0, gum: 0, lol: 0 };
+
+let prices = { choc: 10, gum: 5, lol: 3 };
+
+let gameOver = false;
+
+function statusCheck() {
+  if (money >= 10000) {
+    document.getElementById("status").innerText = "👑 SWEET KING (YOU WIN!)";
+    gameOver = true;
+  } else if (money <= 0 && inventory.choc + inventory.gum + inventory.lol === 0) {
+    document.getElementById("status").innerText = "💀 BANKRUPT";
+    gameOver = true;
+  } else {
+    document.getElementById("status").innerText = "🟢 Trading";
+  }
+}
+
+function marketModifier(place) {
+  if (place === "School") return 0.8;
+  if (place === "City") return 1.1;
+  if (place === "Shop") return 0.9;
+  if (place === "Festival") return 1.6;
+  return 1;
+}
+
+function updatePrices() {
+  let mod = marketModifier(locationName);
+
+  // base drift (addictive market movement)
+  prices.choc = Math.max(1, Math.floor((prices.choc + rand(-3, 5)) * mod));
+  prices.gum  = Math.max(1, Math.floor((prices.gum + rand(-2, 4)) * mod));
+  prices.lol  = Math.max(1, Math.floor((prices.lol + rand(-2, 3)) * mod));
+
+  randomEvent();
+}
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomEvent() {
+  let r = Math.random();
+
+  if (r < 0.10) {
+    alert("🍫 Chocolate craze! Prices DOUBLE!");
+    prices.choc *= 2;
+  }
+  else if (r < 0.18) {
+    alert("🚨 Inspection! You lose £20");
+    money -= 20;
+  }
+  else if (r < 0.25) {
+    alert("🎁 Rare sweet found! +£75");
+    money += 75;
+  }
+  else if (r < 0.28) {
+    alert("💥 Market crash! Prices drop!");
+    prices.choc = Math.max(1, Math.floor(prices.choc * 0.5));
+    prices.gum = Math.max(1, Math.floor(prices.gum * 0.5));
+    prices.lol = Math.max(1, Math.floor(prices.lol * 0.5));
+  }
+}
+
+function travel(place) {
+  if (gameOver) return;
+  locationName = place;
+  updatePrices();
+  updateUI();
+}
+
+function buy(item) {
+  if (gameOver) return;
+
+  if (money >= prices[item]) {
+    money -= prices[item];
+    inventory[item]++;
+    updateUI();
+  }
+}
+
+function sell(item) {
+  if (gameOver) return;
+
+  if (inventory[item] > 0) {
+    money += prices[item];
+    inventory[item]--;
+    updateUI();
+  }
+}
+
+function nextDay() {
+  if (gameOver) return;
+
+  day++;
+  updatePrices();
+
+  // passive risk pressure (keeps tension)
+  if (Math.random() < 0.08) {
+    money -= 10;
+  }
+
+  updateUI();
+}
+
+function travel(place) {
+  locationName = place;
+  updatePrices();
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById("money").innerText = money;
+  document.getElementById("day").innerText = day;
+  document.getElementById("location").innerText = locationName;
+
+  document.getElementById("choc").innerText = prices.choc;
+  document.getElementById("gum").innerText = prices.gum;
+  document.getElementById("lol").innerText = prices.lol;
+
+  statusCheck();
+}
+
+function resetGame() {
+  money = 100;
+  day = 1;
+  locationName = "School";
+  inventory = { choc: 0, gum: 0, lol: 0 };
+  prices = { choc: 10, gum: 5, lol: 3 };
+  gameOver = false;
+  updatePrices();
+  updateUI();
+}
+
+updatePrices();
+updateUI();
+
+</script>
+
+</body>
+</html>
