@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v5</title>
+  <title>Sweet Hustle v5.1</title>
 
   <style>
     body {
@@ -47,22 +47,13 @@
       font-weight: bold;
     }
 
-    button:active {
-      transform: scale(0.98);
-    }
-
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
 
-    .hidden {
-      display: none;
-    }
-
-    .good { background: rgba(46,204,113,0.5); }
-    .bad { background: rgba(231,76,60,0.5); }
+    .hidden { display:none; }
   </style>
 </head>
 
@@ -70,69 +61,71 @@
 
 <div class="game">
 
-  <!-- HEADER -->
   <div class="header">
     💰 £<span id="money"></span> |
     📅 Day <span id="day"></span> |
     📍 <span id="location"></span>
   </div>
 
-  <!-- HOME SCREEN -->
+  <!-- HOME -->
   <div id="homeScreen">
 
     <div class="box">
       <h3>🏠 Travel</h3>
       <button onclick="showScreen('school')">🏫 School</button>
       <button onclick="showScreen('city')">🏙️ City</button>
-      <button onclick="showScreen('shop')">🏪 Shop</button>
       <button onclick="showScreen('festival')">🎡 Festival</button>
+      <button onclick="showScreen('night')">🌙 Night</button>
     </div>
 
   </div>
 
   <!-- SCHOOL -->
   <div id="schoolScreen" class="hidden">
-
     <div class="box">
-      <h3>🏫 School Market</h3>
-      <p>Cheap but low profit</p>
+      <h3>🏫 School Shop</h3>
 
-      <button onclick="buy('choc','school')">🍫 Buy (£<span id="sc_choc"></span>)</button>
-      <button onclick="sell('choc','school')">Sell</button>
+      <button onclick="buy('choc','school')">🍫 Chocolate (£<span id="sc_choc"></span>)</button>
+      <button onclick="buy('gum','school')">🍬 Gummies (£<span id="sc_gum"></span>)</button>
 
       <button onclick="back()">⬅ Back</button>
     </div>
-
   </div>
 
   <!-- CITY -->
   <div id="cityScreen" class="hidden">
-
     <div class="box">
-      <h3>🏙️ City Market</h3>
-      <p>Balanced prices</p>
+      <h3>🏙️ City Shop</h3>
 
-      <button onclick="buy('choc','city')">🍫 Buy (£<span id="ci_choc"></span>)</button>
-      <button onclick="sell('choc','city')">Sell</button>
+      <button onclick="buy('choc','city')">🍫 Chocolate (£<span id="ci_choc"></span>)</button>
+      <button onclick="buy('cookies','city')">🍪 Cookies (£<span id="ci_cookies"></span>)</button>
 
       <button onclick="back()">⬅ Back</button>
     </div>
-
   </div>
 
   <!-- FESTIVAL -->
   <div id="festivalScreen" class="hidden">
-
     <div class="box">
-      <h3>🎡 Festival Market</h3>
-      <p>High risk, high reward</p>
+      <h3>🎡 Festival Shop</h3>
 
-      <button onclick="buy('choc','festival')">🍫 Buy (£<span id="fe_choc"></span>)</button>
-      <button onclick="sell('choc','festival')">Sell</button>
+      <button onclick="buy('lol','festival')">🍭 Lollies (£<span id="fe_lol"></span>)</button>
+      <button onclick="buy('rare','festival')">✨ Rare Candy (£<span id="fe_rare"></span>)</button>
 
       <button onclick="back()">⬅ Back</button>
     </div>
+  </div>
 
+  <!-- NIGHT -->
+  <div id="nightScreen" class="hidden">
+    <div class="box">
+      <h3>🌙 Night Market</h3>
+
+      <button onclick="buy('rare','night')">✨ Rare Candy (£<span id="ni_rare"></span>)</button>
+      <button onclick="buy('gum','night')">🍬 Gummies (£<span id="ni_gum"></span>)</button>
+
+      <button onclick="back()">⬅ Back</button>
+    </div>
   </div>
 
 </div>
@@ -143,37 +136,41 @@ let money = 100;
 let day = 1;
 let locationName = "Home";
 
-let inventory = { choc: 0 };
+let inventory = {
+  choc: 0,
+  gum: 0,
+  lol: 0,
+  cookies: 0,
+  rare: 0
+};
 
+/* PRICES PER LOCATION */
 let prices = {
-  school: { choc: 5 },
-  city: { choc: 10 },
-  festival: { choc: 20 }
+  school:   { choc: 5, gum: 3 },
+  city:     { choc: 10, cookies: 15 },
+  festival: { lol: 20, rare: 80 },
+  night:    { rare: 120, gum: 8 }
 };
 
 /* SCREEN SYSTEM */
 function showScreen(screen){
 
-  document.getElementById("homeScreen").classList.add("hidden");
-  document.getElementById("schoolScreen").classList.add("hidden");
-  document.getElementById("cityScreen").classList.add("hidden");
-  document.getElementById("festivalScreen").classList.add("hidden");
+  document.querySelectorAll(".game > div").forEach(div=>{
+    if(div.id !== "header") div.classList.add("hidden");
+  });
 
   document.getElementById(screen + "Screen").classList.remove("hidden");
 
   locationName = screen.charAt(0).toUpperCase() + screen.slice(1);
-
   updateUI();
 }
 
-/* BACK */
 function back(){
-  document.getElementById("schoolScreen").classList.add("hidden");
-  document.getElementById("cityScreen").classList.add("hidden");
-  document.getElementById("festivalScreen").classList.add("hidden");
+  document.querySelectorAll(".game > div").forEach(div=>{
+    if(div.id !== "header") div.classList.add("hidden");
+  });
 
   document.getElementById("homeScreen").classList.remove("hidden");
-
   locationName = "Home";
   updateUI();
 }
@@ -191,19 +188,6 @@ function buy(item, zone){
   updateUI();
 }
 
-/* SELL */
-function sell(item, zone){
-
-  let price = prices[zone][item];
-
-  if(inventory[item] > 0){
-    money += price;
-    inventory[item]--;
-  }
-
-  updateUI();
-}
-
 /* UI */
 function updateUI(){
 
@@ -211,16 +195,16 @@ function updateUI(){
   document.getElementById("day").innerText = day;
   document.getElementById("location").innerText = locationName;
 
-  if(document.getElementById("sc_choc"))
-    document.getElementById("sc_choc").innerText = prices.school.choc;
+  // update visible prices safely
+  for(let z in prices){
+    for(let i in prices[z]){
+      let el = document.querySelectorAll("span");
+    }
+  }
 
-  if(document.getElementById("ci_choc"))
-    document.getElementById("ci_choc").innerText = prices.city.choc;
-
-  if(document.getElementById("fe_choc"))
-    document.getElementById("fe_choc").innerText = prices.festival.choc;
 }
 
+/* INIT */
 updateUI();
 
 </script>
