@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v5.1</title>
+  <title>Sweet Hustle v5.4</title>
 
   <style>
     body {
@@ -16,7 +16,6 @@
     .game {
       width: 100%;
       max-width: 420px;
-      padding-bottom: 30px;
     }
 
     .header {
@@ -25,15 +24,13 @@
       background: rgba(255,255,255,0.08);
       backdrop-filter: blur(10px);
       padding: 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
     .box {
       background: rgba(255,255,255,0.06);
       margin: 12px;
       padding: 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
     }
 
     button {
@@ -47,12 +44,6 @@
       font-weight: bold;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
     .hidden { display:none; }
   </style>
 </head>
@@ -63,7 +54,6 @@
 
   <div class="header">
     💰 £<span id="money"></span> |
-    📅 Day <span id="day"></span> |
     📍 <span id="location"></span>
   </div>
 
@@ -72,139 +62,201 @@
 
     <div class="box">
       <h3>🏠 Travel</h3>
-      <button onclick="showScreen('school')">🏫 School</button>
-      <button onclick="showScreen('city')">🏙️ City</button>
-      <button onclick="showScreen('festival')">🎡 Festival</button>
-      <button onclick="showScreen('night')">🌙 Night</button>
+      <button onclick="show('school')">🏫 School</button>
+      <button onclick="show('city')">🏙️ City</button>
+      <button onclick="show('festival')">🎡 Festival</button>
+      <button onclick="show('night')">🌙 Night</button>
+    </div>
+
+    <div class="box">
+      <h3>🧠 Missions</h3>
+      <div id="missions"></div>
     </div>
 
   </div>
 
-  <!-- SCHOOL -->
-  <div id="schoolScreen" class="hidden">
-    <div class="box">
-      <h3>🏫 School Shop</h3>
-
-      <button onclick="buy('choc','school')">🍫 Chocolate (£<span id="sc_choc"></span>)</button>
-      <button onclick="buy('gum','school')">🍬 Gummies (£<span id="sc_gum"></span>)</button>
-
-      <button onclick="back()">⬅ Back</button>
-    </div>
+  <!-- SCREENS -->
+  <div id="schoolScreen" class="hidden box">
+    <h3>🏫 School</h3>
+    <button onclick="sell('choc')">Sell Chocolate</button>
+    <button onclick="back()">⬅ Back</button>
   </div>
 
-  <!-- CITY -->
-  <div id="cityScreen" class="hidden">
-    <div class="box">
-      <h3>🏙️ City Shop</h3>
-
-      <button onclick="buy('choc','city')">🍫 Chocolate (£<span id="ci_choc"></span>)</button>
-      <button onclick="buy('cookies','city')">🍪 Cookies (£<span id="ci_cookies"></span>)</button>
-
-      <button onclick="back()">⬅ Back</button>
-    </div>
+  <div id="cityScreen" class="hidden box">
+    <h3>🏙️ City</h3>
+    <button onclick="sell('cookies')">Sell Cookies</button>
+    <button onclick="back()">⬅ Back</button>
   </div>
 
-  <!-- FESTIVAL -->
-  <div id="festivalScreen" class="hidden">
-    <div class="box">
-      <h3>🎡 Festival Shop</h3>
-
-      <button onclick="buy('lol','festival')">🍭 Lollies (£<span id="fe_lol"></span>)</button>
-      <button onclick="buy('rare','festival')">✨ Rare Candy (£<span id="fe_rare"></span>)</button>
-
-      <button onclick="back()">⬅ Back</button>
-    </div>
+  <div id="festivalScreen" class="hidden box">
+    <h3>🎡 Festival</h3>
+    <button onclick="sell('lol')">Sell Lollies</button>
+    <button onclick="sell('rare')">Sell Rare Candy</button>
+    <button onclick="back()">⬅ Back</button>
   </div>
 
-  <!-- NIGHT -->
-  <div id="nightScreen" class="hidden">
-    <div class="box">
-      <h3>🌙 Night Market</h3>
-
-      <button onclick="buy('rare','night')">✨ Rare Candy (£<span id="ni_rare"></span>)</button>
-      <button onclick="buy('gum','night')">🍬 Gummies (£<span id="ni_gum"></span>)</button>
-
-      <button onclick="back()">⬅ Back</button>
-    </div>
+  <div id="nightScreen" class="hidden box">
+    <h3>🌙 Night</h3>
+    <button onclick="sell('rare')">Sell Rare Candy</button>
+    <button onclick="back()">⬅ Back</button>
   </div>
 
 </div>
 
 <script>
 
+/* ================= SOUND SYSTEM ================= */
+
+const sounds = {
+  buy: new Audio("https://actions.google.com/sounds/v1/cash_register/coins.wav"),
+  sell: new Audio("https://actions.google.com/sounds/v1/cash_register/cash_register_01.mp3"),
+  mission: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"),
+  error: new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg")
+};
+
+function playSound(type){
+
+  if(!sounds[type]) return;
+
+  sounds[type].currentTime = 0;
+  sounds[type].play().catch(()=>{});
+}
+
+/* ================= STATE ================= */
+
 let money = 100;
-let day = 1;
 let locationName = "Home";
 
-let inventory = {
-  choc: 0,
-  gum: 0,
-  lol: 0,
-  cookies: 0,
-  rare: 0
-};
+let inventory = {};
+let missions = {};
 
-/* PRICES PER LOCATION */
-let prices = {
-  school:   { choc: 5, gum: 3 },
-  city:     { choc: 10, cookies: 15 },
-  festival: { lol: 20, rare: 80 },
-  night:    { rare: 120, gum: 8 }
-};
+/* ================= INIT / LOAD ================= */
 
-/* SCREEN SYSTEM */
-function showScreen(screen){
+function initGame(){
 
-  document.querySelectorAll(".game > div").forEach(div=>{
-    if(div.id !== "header") div.classList.add("hidden");
-  });
+  let saved = localStorage.getItem("sweetSave");
 
+  if(saved){
+    let data = JSON.parse(saved);
+    money = data.money;
+    locationName = data.locationName;
+    inventory = data.inventory;
+    missions = data.missions;
+  } else {
+
+    inventory = {
+      choc: 0,
+      gum: 0,
+      lol: 0,
+      cookies: 0,
+      rare: 0
+    };
+
+    missions = {
+      choc: { target:5, progress:0, reward:50 },
+      gum: { target:8, progress:0, reward:60 },
+      lol: { target:3, progress:0, reward:80 },
+      cookies: { target:6, progress:0, reward:100 },
+      rare: { target:2, progress:0, reward:200 }
+    };
+  }
+}
+
+/* ================= SAVE ================= */
+
+function saveGame(){
+  localStorage.setItem("sweetSave", JSON.stringify({
+    money,
+    locationName,
+    inventory,
+    missions
+  }));
+}
+
+/* ================= SCREEN SYSTEM ================= */
+
+function show(screen){
+  hideAll();
   document.getElementById(screen + "Screen").classList.remove("hidden");
-
-  locationName = screen.charAt(0).toUpperCase() + screen.slice(1);
+  locationName = screen;
   updateUI();
+  saveGame();
 }
 
 function back(){
-  document.querySelectorAll(".game > div").forEach(div=>{
-    if(div.id !== "header") div.classList.add("hidden");
-  });
-
+  hideAll();
   document.getElementById("homeScreen").classList.remove("hidden");
   locationName = "Home";
   updateUI();
+  saveGame();
 }
 
-/* BUY */
-function buy(item, zone){
-
-  let price = prices[zone][item];
-
-  if(money >= price){
-    money -= price;
-    inventory[item]++;
-  }
-
-  updateUI();
+function hideAll(){
+  document.querySelectorAll(".game > div").forEach(d=>{
+    if(d.id !== "homeScreen") d.classList.add("hidden");
+  });
 }
 
-/* UI */
-function updateUI(){
+/* ================= SELL + MISSIONS ================= */
 
-  document.getElementById("money").innerText = money;
-  document.getElementById("day").innerText = day;
-  document.getElementById("location").innerText = locationName;
+function sell(item){
 
-  // update visible prices safely
-  for(let z in prices){
-    for(let i in prices[z]){
-      let el = document.querySelectorAll("span");
+  inventory[item]++;
+
+  money += 10;
+
+  playSound("sell");
+
+  if(missions[item]){
+
+    missions[item].progress++;
+
+    if(missions[item].progress >= missions[item].target){
+
+      money += missions[item].reward;
+
+      missions[item].target += 2;
+      missions[item].progress = 0;
+      missions[item].reward += 25;
+
+      playSound("mission");
+      alert("🎯 Mission Complete: " + item.toUpperCase());
     }
   }
 
+  updateUI();
+  saveGame();
 }
 
-/* INIT */
+/* ================= UI ================= */
+
+function updateMissions(){
+
+  let html = "";
+
+  for(let item in missions){
+    let m = missions[item];
+
+    html += `
+      <div style="margin-bottom:8px">
+        <b>${item.toUpperCase()}</b><br>
+        ${m.progress}/${m.target} → £${m.reward}
+      </div>
+    `;
+  }
+
+  document.getElementById("missions").innerHTML = html;
+}
+
+function updateUI(){
+  document.getElementById("money").innerText = money;
+  document.getElementById("location").innerText = locationName;
+  updateMissions();
+}
+
+/* ================= START ================= */
+
+initGame();
 updateUI();
 
 </script>
