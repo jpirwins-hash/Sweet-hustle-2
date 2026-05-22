@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v6</title>
+  <title>Sweet Hustle v7</title>
 
   <style>
     body {
@@ -35,26 +35,22 @@
 
     button {
       width: 100%;
-      padding: 12px;
-      margin: 6px 0;
+      padding: 10px;
+      margin: 5px 0;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       background: rgba(255,255,255,0.12);
       color: white;
       font-weight: bold;
     }
 
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
     .hidden { display:none; }
-
-    .danger {
-      color: #ff6b6b;
-      font-weight: bold;
-    }
-
-    .goal {
-      color: #4cd137;
-      font-weight: bold;
-    }
   </style>
 </head>
 
@@ -65,56 +61,70 @@
   <!-- HUD -->
   <div class="header">
     💰 £<span id="money"></span> |
-    ⭐ Level <span id="level"></span> |
-    🏆 <span id="rank"></span>
-    <br>
-    🎯 Goal: <span class="goal">Reach £1000</span>
+    📍 <span id="location"></span>
   </div>
 
   <!-- HOME -->
   <div id="homeScreen">
 
     <div class="box">
-      <h3>🧍 Your Run</h3>
-
-      <p>Start from nothing and build your candy empire.</p>
-
-      <p class="danger">If money hits £0 → GAME OVER</p>
-    </div>
-
-    <div class="box">
-      <h3>🏪 Travel</h3>
+      <h3>📍 Travel</h3>
       <button onclick="show('school')">🏫 School</button>
       <button onclick="show('city')">🏙️ City</button>
       <button onclick="show('festival')">🎡 Festival</button>
       <button onclick="show('night')">🌙 Night</button>
     </div>
 
+    <div class="box">
+      <h3>📦 Inventory</h3>
+      <div id="inventory"></div>
+    </div>
+
   </div>
 
-  <!-- SCREENS -->
+  <!-- SCHOOL -->
   <div id="schoolScreen" class="hidden box">
-    <h3>🏫 School</h3>
-    <button onclick="sell('choc')">Sell Chocolate</button>
+    <h3>🏫 School Market</h3>
+
+    <button onclick="buy('choc','school')">Buy Chocolate (£<span id="sc_buy"></span>)</button>
+    <button onclick="sell('choc','school')">Sell Chocolate (£<span id="sc_sell"></span>)</button>
+
     <button onclick="back()">⬅ Back</button>
   </div>
 
+  <!-- CITY -->
   <div id="cityScreen" class="hidden box">
-    <h3>🏙️ City</h3>
-    <button onclick="sell('cookies')">Sell Cookies</button>
+    <h3>🏙️ City Market</h3>
+
+    <button onclick="buy('choc','city')">Buy Chocolate (£<span id="ci_buy"></span>)</button>
+    <button onclick="sell('choc','city')">Sell Chocolate (£<span id="ci_sell"></span>)</button>
+
+    <button onclick="buy('cookies','city')">Buy Cookies (£<span id="ci_buy2"></span>)</button>
+    <button onclick="sell('cookies','city')">Sell Cookies (£<span id="ci_sell2"></span>)</button>
+
     <button onclick="back()">⬅ Back</button>
   </div>
 
+  <!-- FESTIVAL -->
   <div id="festivalScreen" class="hidden box">
-    <h3>🎡 Festival</h3>
-    <button onclick="sell('lol')">Sell Lollies</button>
-    <button onclick="sell('rare')">Sell Rare Candy</button>
+    <h3>🎡 Festival Market</h3>
+
+    <button onclick="buy('lol','festival')">Buy Lollies (£<span id="fe_buy"></span>)</button>
+    <button onclick="sell('lol','festival')">Sell Lollies (£<span id="fe_sell"></span>)</button>
+
+    <button onclick="buy('rare','festival')">Buy Rare (£<span id="fe_buy2"></span>)</button>
+    <button onclick="sell('rare','festival')">Sell Rare (£<span id="fe_sell2"></span>)</button>
+
     <button onclick="back()">⬅ Back</button>
   </div>
 
+  <!-- NIGHT -->
   <div id="nightScreen" class="hidden box">
-    <h3>🌙 Night</h3>
-    <button onclick="sell('rare')">Sell Rare Candy</button>
+    <h3>🌙 Night Market</h3>
+
+    <button onclick="buy('rare','night')">Buy Rare (£<span id="ni_buy"></span>)</button>
+    <button onclick="sell('rare','night')">Sell Rare (£<span id="ni_sell"></span>)</button>
+
     <button onclick="back()">⬅ Back</button>
   </div>
 
@@ -122,14 +132,11 @@
 
 <script>
 
-/* ================= STARTING RUN ================= */
+/* ================= STATE ================= */
 
-let money = 20;   // 🔥 HARD START (important!)
-let level = 1;
-let xp = 0;
-let xpNeeded = 20;
+let money = 100;
+let locationName = "Home";
 
-/* INVENTORY */
 let inventory = {
   choc: 0,
   cookies: 0,
@@ -137,24 +144,27 @@ let inventory = {
   rare: 0
 };
 
-/* MISSIONS (kept simple for now) */
-let missions = {
-  choc: { target:5, progress:0, reward:50 },
-  cookies: { target:4, progress:0, reward:80 },
-  lol: { target:3, progress:0, reward:100 },
-  rare: { target:2, progress:0, reward:200 }
+/* PRICE SYSTEM (DOPE WARS STYLE DIFFERENCE) */
+let prices = {
+  school:   { choc: 5 },
+  city:     { choc: 10, cookies: 15 },
+  festival: { lol: 20, rare: 60 },
+  night:    { rare: 120 }
 };
 
-/* SCREEN */
+/* ================= SCREEN SYSTEM ================= */
+
 function show(screen){
   hideAll();
   document.getElementById(screen + "Screen").classList.remove("hidden");
+  locationName = screen;
   updateUI();
 }
 
 function back(){
   hideAll();
   document.getElementById("homeScreen").classList.remove("hidden");
+  locationName = "Home";
   updateUI();
 }
 
@@ -164,59 +174,68 @@ function hideAll(){
   });
 }
 
-/* XP + LEVEL */
-function addXP(amount){
-  xp += amount;
+/* ================= ECONOMY ================= */
 
-  if(xp >= xpNeeded){
-    xp -= xpNeeded;
-    level++;
-    xpNeeded = Math.floor(xpNeeded * 1.25);
+function buy(item, zone){
+  let price = prices[zone][item];
 
-    money += 20; // small reward
-  }
-}
-
-/* SELL SYSTEM */
-function sell(item){
-
-  let baseValue = 10;
-
-  if(item === "rare") baseValue = 40;
-  if(item === "lol") baseValue = 20;
-  if(item === "cookies") baseValue = 15;
-
-  money += baseValue;
-
-  inventory[item]++;
-
-  addXP(5);
-
-  if(money <= 0){
-    alert("💀 GAME OVER - You went bankrupt!");
-    location.reload();
+  if(money >= price){
+    money -= price;
+    inventory[item]++;
   }
 
   updateUI();
 }
 
-/* RANK SYSTEM */
-function getRank(){
-  if(level >= 10) return "Candy King";
-  if(level >= 5) return "Dealer";
-  return "Hustler";
+function sell(item, zone){
+  let price = prices[zone][item];
+
+  if(inventory[item] > 0){
+    money += price;
+    inventory[item]--;
+  }
+
+  updateUI();
 }
 
-/* UI */
+/* ================= INVENTORY UI ================= */
+
+function updateInventory(){
+
+  let html = "";
+
+  for(let item in inventory){
+    html += `${item.toUpperCase()}: ${inventory[item]}<br>`;
+  }
+
+  document.getElementById("inventory").innerHTML = html;
+}
+
+/* ================= PRICE DISPLAY ================= */
+
+function updatePrices(){
+  for(let zone in prices){
+    for(let item in prices[zone]){
+
+      let buyEl = document.getElementById(zone.slice(0,2)+"_buy");
+      let sellEl = document.getElementById(zone.slice(0,2)+"_sell");
+
+      // optional safe updates (we keep simple UI below)
+    }
+  }
+}
+
+/* ================= UI ================= */
+
 function updateUI(){
-
   document.getElementById("money").innerText = money;
-  document.getElementById("level").innerText = level;
-  document.getElementById("rank").innerText = getRank();
+  document.getElementById("location").innerText = locationName;
 
+  updateInventory();
 }
 
-/* START */
+/* ================= START ================= */
+
 updateUI();
 
 </script>
