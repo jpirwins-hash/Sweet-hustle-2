@@ -1,34 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v4.2</title>
+  <title>Sweet Hustle v4.4</title>
 
   <style>
     body {
       margin: 0;
       font-family: Arial;
-      background: linear-gradient(180deg, #ffe6f0, #fff0f5);
+      background: radial-gradient(circle at top, #1a1a2e, #0f0f1a);
+      color: white;
       display: flex;
       justify-content: center;
     }
 
-    /* PHONE CONTAINER (important upgrade) */
     .game {
       width: 100%;
       max-width: 420px;
-      padding-bottom: 20px;
+      padding-bottom: 30px;
     }
 
     /* TOP HUD */
     .header {
       position: sticky;
       top: 0;
-      background: white;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
       padding: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      z-index: 10;
-      border-bottom-left-radius: 16px;
-      border-bottom-right-radius: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
     .title {
@@ -38,43 +36,42 @@
     }
 
     .hud {
-      font-size: 14px;
-      opacity: 0.85;
+      font-size: 13px;
+      opacity: 0.9;
     }
 
-    /* CARDS */
+    /* GLASS CARDS */
     .box {
-      background: white;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(10px);
       margin: 12px;
       padding: 14px;
       border-radius: 18px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
     }
 
     h3 {
       margin-top: 0;
     }
 
-    /* BUTTONS */
+    /* BUTTONS (neutral game style) */
     button {
       width: 100%;
-      padding: 14px;
+      padding: 12px;
       margin: 6px 0;
       border: none;
-      border-radius: 14px;
-      background: #ff4da6;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.12);
       color: white;
       font-weight: bold;
-      font-size: 14px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
     button:active {
       transform: scale(0.98);
     }
 
-    .good { background: #2ecc71; }
-    .bad { background: #e74c3c; }
+    .good { background: rgba(46, 204, 113, 0.6); }
+    .bad { background: rgba(231, 76, 60, 0.6); }
 
     .grid {
       display: grid;
@@ -82,10 +79,12 @@
       gap: 8px;
     }
 
-    .small {
+    .mission {
       font-size: 13px;
       opacity: 0.9;
+      line-height: 1.4;
     }
+
   </style>
 </head>
 
@@ -101,8 +100,13 @@
       📍 <span id="location"></span>
     </div>
     <div class="hud">
-      🏆 Rank: <span id="rank"></span>
+      🏆 <span id="rank"></span>
     </div>
+  </div>
+
+  <div class="box">
+    <h3>🧠 Missions</h3>
+    <div class="mission" id="missionText"></div>
   </div>
 
   <div class="box">
@@ -112,22 +116,11 @@
       <button onclick="travel('City')">🏙️ City</button>
       <button onclick="travel('Shop')">🏪 Shop</button>
       <button onclick="travel('Festival')">🎡 Festival</button>
-      <button onclick="travel('Night')">🌆 Night</button>
     </div>
   </div>
 
   <div class="box">
-    <h3>🍬 Prices</h3>
-    <div class="small">
-      🍫 Choco: £<span id="choc"></span><br>
-      🍬 Gummies: £<span id="gum"></span><br>
-      🍭 Lollies: £<span id="lol"></span><br>
-      ✨ Rare: £<span id="rare"></span>
-    </div>
-  </div>
-
-  <div class="box">
-    <h3>🎮 Trading</h3>
+    <h3>🍬 Trading</h3>
 
     <button onclick="buy('choc')">Buy Chocolate 🍫</button>
     <button onclick="sell('choc')">Sell Chocolate 🍫</button>
@@ -144,9 +137,9 @@
 
   <div class="box">
     <h3>🛠️ Upgrades</h3>
-    <button onclick="upgrade('storage')">📦 Storage Upgrade (£200)</button>
-    <button onclick="upgrade('luck')">🍀 Luck Upgrade (£300)</button>
-    <button onclick="upgrade('trade')">💹 Trade Upgrade (£400)</button>
+    <button onclick="upgrade('storage')">📦 Storage</button>
+    <button onclick="upgrade('luck')">🍀 Luck</button>
+    <button onclick="upgrade('trade')">💹 Trade</button>
   </div>
 
   <div class="box">
@@ -162,120 +155,108 @@ let money = 100;
 let day = 1;
 let locationName = "School";
 let rank = "Street Trader";
-let storage = 10;
 
 let inventory = { choc: 0, gum: 0, lol: 0, rare: 0 };
-
 let prices = { choc: 10, gum: 5, lol: 3, rare: 50 };
 
-function rand(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+let mission = {
+  text: "Make £200",
+  reward: 100,
+  target: 200
+};
+
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
 }
 
-function marketModifier(loc) {
-  if (loc === "School") return 0.8;
-  if (loc === "City") return 1.1;
-  if (loc === "Shop") return 0.9;
-  if (loc === "Festival") return 1.6;
-  if (loc === "Night") return 1.8;
+function marketModifier(loc){
+  if(loc==="School") return 0.8;
+  if(loc==="City") return 1.1;
+  if(loc==="Shop") return 0.9;
+  if(loc==="Festival") return 1.6;
   return 1;
 }
 
-function updatePrices() {
+/* PRICE SYSTEM */
+function updatePrices(){
   let mod = marketModifier(locationName);
 
-  prices.choc = Math.max(1, rand(5, 15) * mod);
-  prices.gum = Math.max(1, rand(2, 10) * mod);
-  prices.lol = Math.max(1, rand(1, 8) * mod);
-  prices.rare = Math.max(10, rand(30, 120) * mod);
-
-  events();
+  prices.choc = Math.max(1, rand(5,15)*mod);
+  prices.gum = Math.max(1, rand(2,10)*mod);
+  prices.lol = Math.max(1, rand(1,8)*mod);
+  prices.rare = Math.max(10, rand(30,120)*mod);
 }
 
-function events() {
-  let r = Math.random();
+/* MISSIONS */
+function updateMission(){
+  if(money >= mission.target){
+    money += mission.reward;
+    mission.target += 300;
+    mission.reward += 50;
 
-  if (r < 0.10) {
-    alert("🍫 Chocolate craze!");
-    prices.choc *= 2;
-  } else if (r < 0.18) {
-    money -= 20;
-  } else if (r < 0.25) {
-    money += 80;
-  } else if (r < 0.30) {
-    prices.choc *= 0.5;
-    prices.gum *= 0.5;
-    prices.lol *= 0.5;
-    prices.rare *= 0.5;
+    alert("🎯 Mission Complete! Reward given!");
   }
+
+  document.getElementById("missionText").innerText =
+    "Goal: Reach £" + mission.target +
+    " | Reward: £" + mission.reward;
 }
 
-function inventoryTotal() {
-  return inventory.choc + inventory.gum + inventory.lol + inventory.rare;
-}
-
-function buy(item) {
-  if (inventoryTotal() >= storage) return alert("No space!");
-
-  if (money >= prices[item]) {
+/* GAME ACTIONS */
+function buy(item){
+  if(money >= prices[item]){
     money -= prices[item];
     inventory[item]++;
-    updateUI();
   }
+  updateUI();
 }
 
-function sell(item) {
-  if (inventory[item] > 0) {
+function sell(item){
+  if(inventory[item] > 0){
     money += prices[item];
     inventory[item]--;
-    updateUI();
   }
+  updateUI();
 }
 
-function travel(loc) {
+function travel(loc){
   locationName = loc;
   updatePrices();
   updateUI();
 }
 
-function upgrade(type) {
-  if (type === "storage" && money >= 200) {
-    money -= 200;
-    storage += 5;
-  }
-
-  if (type === "luck" && money >= 300) money -= 300;
-  if (type === "trade" && money >= 400) money -= 400;
-
+function upgrade(type){
+  if(type==="storage" && money>=200) money-=200;
+  if(type==="luck" && money>=300) money-=300;
+  if(type==="trade" && money>=400) money-=400;
   updateUI();
 }
 
-function nextDay() {
+function nextDay(){
   day++;
 
   updatePrices();
 
-  if (money > 5000) rank = "Sweet King";
-  else if (money > 2000) rank = "Dealer";
-  else if (money > 500) rank = "Trader";
+  if(money>5000) rank="Sweet King";
+  else if(money>2000) rank="Dealer";
+  else if(money>500) rank="Trader";
 
+  updateMission();
   updateUI();
 }
 
-function resetGame() {
+function resetGame(){
   location.reload();
 }
 
-function updateUI() {
+/* UI */
+function updateUI(){
   document.getElementById("money").innerText = Math.floor(money);
   document.getElementById("day").innerText = day;
   document.getElementById("location").innerText = locationName;
   document.getElementById("rank").innerText = rank;
 
-  document.getElementById("choc").innerText = Math.floor(prices.choc);
-  document.getElementById("gum").innerText = Math.floor(prices.gum);
-  document.getElementById("lol").innerText = Math.floor(prices.lol);
-  document.getElementById("rare").innerText = Math.floor(prices.rare);
+  updateMission();
 }
 
 updatePrices();
