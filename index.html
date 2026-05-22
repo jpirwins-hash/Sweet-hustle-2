@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v5.5</title>
+  <title>Sweet Hustle v6</title>
 
   <style>
     body {
@@ -18,38 +18,13 @@
       max-width: 420px;
     }
 
-    /* ================= HUD ================= */
-
     .header {
       position: sticky;
       top: 0;
       background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(10px);
       padding: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
     }
-
-    .hud-line {
-      font-size: 13px;
-      margin: 2px 0;
-    }
-
-    .xp-bar {
-      width: 100%;
-      height: 8px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 6px;
-    }
-
-    .xp-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #00c6ff, #0072ff);
-    }
-
-    /* ================= BOX ================= */
 
     .box {
       background: rgba(255,255,255,0.06);
@@ -70,6 +45,16 @@
     }
 
     .hidden { display:none; }
+
+    .danger {
+      color: #ff6b6b;
+      font-weight: bold;
+    }
+
+    .goal {
+      color: #4cd137;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -77,40 +62,32 @@
 
 <div class="game">
 
-  <!-- ================= HUD ================= -->
+  <!-- HUD -->
   <div class="header">
-
-    <div class="hud-line">
-      💰 £<span id="money"></span> |
-      📅 Day <span id="day"></span> |
-      📍 <span id="location"></span>
-    </div>
-
-    <div class="hud-line">
-      🏆 <span id="rank"></span> |
-      ⭐ Level <span id="level"></span>
-    </div>
-
-    <div class="xp-bar">
-      <div class="xp-fill" id="xpFill"></div>
-    </div>
-
+    💰 £<span id="money"></span> |
+    ⭐ Level <span id="level"></span> |
+    🏆 <span id="rank"></span>
+    <br>
+    🎯 Goal: <span class="goal">Reach £1000</span>
   </div>
 
   <!-- HOME -->
   <div id="homeScreen">
 
     <div class="box">
-      <h3>🏠 Travel</h3>
+      <h3>🧍 Your Run</h3>
+
+      <p>Start from nothing and build your candy empire.</p>
+
+      <p class="danger">If money hits £0 → GAME OVER</p>
+    </div>
+
+    <div class="box">
+      <h3>🏪 Travel</h3>
       <button onclick="show('school')">🏫 School</button>
       <button onclick="show('city')">🏙️ City</button>
       <button onclick="show('festival')">🎡 Festival</button>
       <button onclick="show('night')">🌙 Night</button>
-    </div>
-
-    <div class="box">
-      <h3>🧠 Missions</h3>
-      <div id="missions"></div>
     </div>
 
   </div>
@@ -145,101 +122,40 @@
 
 <script>
 
-/* ================= STATE ================= */
+/* ================= STARTING RUN ================= */
 
-let money = 100;
-let locationName = "Home";
-
+let money = 20;   // 🔥 HARD START (important!)
 let level = 1;
 let xp = 0;
 let xpNeeded = 20;
 
-let inventory = {};
-let missions = {};
+/* INVENTORY */
+let inventory = {
+  choc: 0,
+  cookies: 0,
+  lol: 0,
+  rare: 0
+};
 
-/* ================= INIT ================= */
+/* MISSIONS (kept simple for now) */
+let missions = {
+  choc: { target:5, progress:0, reward:50 },
+  cookies: { target:4, progress:0, reward:80 },
+  lol: { target:3, progress:0, reward:100 },
+  rare: { target:2, progress:0, reward:200 }
+};
 
-function initGame(){
-
-  let saved = localStorage.getItem("sweetSave");
-
-  if(saved){
-    let data = JSON.parse(saved);
-
-    money = data.money;
-    locationName = data.locationName;
-    inventory = data.inventory;
-    missions = data.missions;
-
-    level = data.level;
-    xp = data.xp;
-    xpNeeded = data.xpNeeded;
-
-  } else {
-
-    inventory = {
-      choc: 0,
-      gum: 0,
-      lol: 0,
-      cookies: 0,
-      rare: 0
-    };
-
-    missions = {
-      choc: { target:5, progress:0, reward:50 },
-      gum: { target:8, progress:0, reward:60 },
-      lol: { target:3, progress:0, reward:80 },
-      cookies: { target:6, progress:0, reward:100 },
-      rare: { target:2, progress:0, reward:200 }
-    };
-  }
-}
-
-/* ================= SAVE ================= */
-
-function saveGame(){
-  localStorage.setItem("sweetSave", JSON.stringify({
-    money,
-    locationName,
-    inventory,
-    missions,
-    level,
-    xp,
-    xpNeeded
-  }));
-}
-
-/* ================= XP SYSTEM ================= */
-
-function addXP(amount){
-
-  xp += amount;
-
-  if(xp >= xpNeeded){
-    xp -= xpNeeded;
-    level++;
-    xpNeeded = Math.floor(xpNeeded * 1.3);
-
-    money += 50; // level up reward
-  }
-}
-
-/* ================= SCREEN ================= */
-
+/* SCREEN */
 function show(screen){
   hideAll();
   document.getElementById(screen + "Screen").classList.remove("hidden");
-  locationName = screen;
   updateUI();
-  saveGame();
 }
 
 function back(){
   hideAll();
   document.getElementById("homeScreen").classList.remove("hidden");
-  locationName = "Home";
   updateUI();
-  saveGame();
 }
 
 function hideAll(){
@@ -248,79 +164,59 @@ function hideAll(){
   });
 }
 
-/* ================= SELL ================= */
+/* XP + LEVEL */
+function addXP(amount){
+  xp += amount;
 
+  if(xp >= xpNeeded){
+    xp -= xpNeeded;
+    level++;
+    xpNeeded = Math.floor(xpNeeded * 1.25);
+
+    money += 20; // small reward
+  }
+}
+
+/* SELL SYSTEM */
 function sell(item){
+
+  let baseValue = 10;
+
+  if(item === "rare") baseValue = 40;
+  if(item === "lol") baseValue = 20;
+  if(item === "cookies") baseValue = 15;
+
+  money += baseValue;
 
   inventory[item]++;
 
-  money += 10;
-
   addXP(5);
 
-  if(missions[item]){
-    missions[item].progress++;
-
-    if(missions[item].progress >= missions[item].target){
-      money += missions[item].reward;
-
-      missions[item].target += 2;
-      missions[item].progress = 0;
-      missions[item].reward += 25;
-
-      alert("🎯 Mission Complete: " + item.toUpperCase());
-    }
+  if(money <= 0){
+    alert("💀 GAME OVER - You went bankrupt!");
+    location.reload();
   }
 
   updateUI();
-  saveGame();
 }
 
-/* ================= RANK ================= */
-
+/* RANK SYSTEM */
 function getRank(){
   if(level >= 10) return "Candy King";
-  if(level >= 5) return "Sweet Dealer";
-  return "Street Hustler";
+  if(level >= 5) return "Dealer";
+  return "Hustler";
 }
 
-/* ================= UI ================= */
-
-function updateMissions(){
-
-  let html = "";
-
-  for(let item in missions){
-    let m = missions[item];
-
-    html += `
-      <div style="margin-bottom:8px">
-        <b>${item.toUpperCase()}</b><br>
-        ${m.progress}/${m.target} → £${m.reward}
-      </div>
-    `;
-  }
-
-  document.getElementById("missions").innerHTML = html;
-}
-
+/* UI */
 function updateUI(){
 
   document.getElementById("money").innerText = money;
-  document.getElementById("location").innerText = locationName;
-
   document.getElementById("level").innerText = level;
   document.getElementById("rank").innerText = getRank();
 
-  let percent = (xp / xpNeeded) * 100;
-  document.getElementById("xpFill").style.width = percent + "%";
-
-  updateMissions();
 }
 
-/* ================= START ================= */
-
-initGame();
+/* START */
 updateUI();
 
 </script>
