@@ -1,114 +1,159 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v4.1</title>
+  <title>Sweet Hustle v4.2</title>
 
   <style>
     body {
       margin: 0;
       font-family: Arial;
-      background: linear-gradient(180deg, #fff0f5, #ffe6f0);
-      text-align: center;
-      color: #222;
+      background: linear-gradient(180deg, #ffe6f0, #fff0f5);
+      display: flex;
+      justify-content: center;
     }
 
-    /* HEADER */
+    /* PHONE CONTAINER (important upgrade) */
+    .game {
+      width: 100%;
+      max-width: 420px;
+      padding-bottom: 20px;
+    }
+
+    /* TOP HUD */
     .header {
       position: sticky;
       top: 0;
       background: white;
-      padding: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       z-index: 10;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .hud {
+      font-size: 14px;
+      opacity: 0.85;
     }
 
     /* CARDS */
     .box {
       background: white;
-      padding: 14px;
       margin: 12px;
-      border-radius: 16px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      padding: 14px;
+      border-radius: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    h3 {
+      margin-top: 0;
     }
 
     /* BUTTONS */
     button {
-      padding: 12px;
-      margin: 6px;
+      width: 100%;
+      padding: 14px;
+      margin: 6px 0;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       background: #ff4da6;
       color: white;
       font-weight: bold;
-      width: 45%;
+      font-size: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    button:active {
+      transform: scale(0.98);
     }
 
     .good { background: #2ecc71; }
     .bad { background: #e74c3c; }
 
-    .button-grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .small {
+      font-size: 13px;
+      opacity: 0.9;
     }
   </style>
 </head>
 
 <body>
 
-<div class="header">
-  <h2>🍭 Sweet Hustle v4.1</h2>
-  💰 £<span id="money"></span> |
-  📅 Day <span id="day"></span> |
-  📍 <span id="location"></span> |
-  🏆 <span id="rank"></span>
-</div>
+<div class="game">
 
-<div class="box">
-  <h3>📍 Travel</h3>
-  <button onclick="travel('School')">🏫 School</button>
-  <button onclick="travel('City')">🏙️ City</button>
-  <button onclick="travel('Shop')">🏪 Shop</button>
-  <button onclick="travel('Festival')">🎡 Festival</button>
-  <button onclick="travel('Night')">🌆 Night</button>
-</div>
-
-<div class="box">
-  <h3>🍬 Prices</h3>
-  🍫 Choco: £<span id="choc"></span><br>
-  🍬 Gummies: £<span id="gum"></span><br>
-  🍭 Lollies: £<span id="lol"></span><br>
-  ✨ Rare Candy: £<span id="rare"></span>
-</div>
-
-<div class="box">
-  <h3>🍬 Trading</h3>
-
-  <div class="button-grid">
-    <button onclick="buy('choc')">🍫 Buy</button>
-    <button onclick="sell('choc')">Sell</button>
-
-    <button onclick="buy('gum')">🍬 Buy</button>
-    <button onclick="sell('gum')">Sell</button>
-
-    <button onclick="buy('lol')">🍭 Buy</button>
-    <button onclick="sell('lol')">Sell</button>
-
-    <button onclick="buy('rare')">✨ Buy</button>
-    <button onclick="sell('rare')">Sell</button>
+  <div class="header">
+    <div class="title">🍭 Sweet Hustle</div>
+    <div class="hud">
+      💰 £<span id="money"></span> |
+      📅 Day <span id="day"></span> |
+      📍 <span id="location"></span>
+    </div>
+    <div class="hud">
+      🏆 Rank: <span id="rank"></span>
+    </div>
   </div>
-</div>
 
-<div class="box">
-  <h3>🛠️ Upgrades</h3>
-  <button onclick="upgrade('storage')">📦 Storage (£200)</button>
-  <button onclick="upgrade('luck')">🍀 Luck (£300)</button>
-  <button onclick="upgrade('trade')">💹 Trade (£400)</button>
-</div>
+  <div class="box">
+    <h3>📍 Travel</h3>
+    <div class="grid">
+      <button onclick="travel('School')">🏫 School</button>
+      <button onclick="travel('City')">🏙️ City</button>
+      <button onclick="travel('Shop')">🏪 Shop</button>
+      <button onclick="travel('Festival')">🎡 Festival</button>
+      <button onclick="travel('Night')">🌆 Night</button>
+    </div>
+  </div>
 
-<div class="box">
-  <button class="good" onclick="nextDay()">➡️ Next Day</button>
-  <button class="bad" onclick="resetGame()">🔄 Reset</button>
+  <div class="box">
+    <h3>🍬 Prices</h3>
+    <div class="small">
+      🍫 Choco: £<span id="choc"></span><br>
+      🍬 Gummies: £<span id="gum"></span><br>
+      🍭 Lollies: £<span id="lol"></span><br>
+      ✨ Rare: £<span id="rare"></span>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3>🎮 Trading</h3>
+
+    <button onclick="buy('choc')">Buy Chocolate 🍫</button>
+    <button onclick="sell('choc')">Sell Chocolate 🍫</button>
+
+    <button onclick="buy('gum')">Buy Gummies 🍬</button>
+    <button onclick="sell('gum')">Sell Gummies 🍬</button>
+
+    <button onclick="buy('lol')">Buy Lollies 🍭</button>
+    <button onclick="sell('lol')">Sell Lollies 🍭</button>
+
+    <button onclick="buy('rare')">Buy Rare ✨</button>
+    <button onclick="sell('rare')">Sell Rare ✨</button>
+  </div>
+
+  <div class="box">
+    <h3>🛠️ Upgrades</h3>
+    <button onclick="upgrade('storage')">📦 Storage Upgrade (£200)</button>
+    <button onclick="upgrade('luck')">🍀 Luck Upgrade (£300)</button>
+    <button onclick="upgrade('trade')">💹 Trade Upgrade (£400)</button>
+  </div>
+
+  <div class="box">
+    <button class="good" onclick="nextDay()">➡️ Next Day</button>
+    <button class="bad" onclick="resetGame()">🔄 Reset</button>
+  </div>
+
 </div>
 
 <script>
@@ -116,22 +161,12 @@
 let money = 100;
 let day = 1;
 let locationName = "School";
-let storage = 10;
 let rank = "Street Trader";
+let storage = 10;
 
-let inventory = {
-  choc: 0,
-  gum: 0,
-  lol: 0,
-  rare: 0
-};
+let inventory = { choc: 0, gum: 0, lol: 0, rare: 0 };
 
-let prices = {
-  choc: 10,
-  gum: 5,
-  lol: 3,
-  rare: 50
-};
+let prices = { choc: 10, gum: 5, lol: 3, rare: 50 };
 
 function rand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -163,17 +198,11 @@ function events() {
   if (r < 0.10) {
     alert("🍫 Chocolate craze!");
     prices.choc *= 2;
-  }
-  else if (r < 0.18) {
-    alert("🚨 Inspection! -£20");
+  } else if (r < 0.18) {
     money -= 20;
-  }
-  else if (r < 0.25) {
-    alert("🎁 Found rare candy! +£80");
+  } else if (r < 0.25) {
     money += 80;
-  }
-  else if (r < 0.30) {
-    alert("📉 Market crash!");
+  } else if (r < 0.30) {
     prices.choc *= 0.5;
     prices.gum *= 0.5;
     prices.lol *= 0.5;
@@ -186,7 +215,7 @@ function inventoryTotal() {
 }
 
 function buy(item) {
-  if (inventoryTotal() >= storage) return alert("📦 No storage!");
+  if (inventoryTotal() >= storage) return alert("No space!");
 
   if (money >= prices[item]) {
     money -= prices[item];
@@ -215,13 +244,8 @@ function upgrade(type) {
     storage += 5;
   }
 
-  if (type === "luck" && money >= 300) {
-    money -= 300;
-  }
-
-  if (type === "trade" && money >= 400) {
-    money -= 400;
-  }
+  if (type === "luck" && money >= 300) money -= 300;
+  if (type === "trade" && money >= 400) money -= 400;
 
   updateUI();
 }
