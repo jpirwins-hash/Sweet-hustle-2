@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v7</title>
+  <title>Sweet Hustle v7.1</title>
 
   <style>
     body {
@@ -35,22 +35,20 @@
 
     button {
       width: 100%;
-      padding: 10px;
-      margin: 5px 0;
+      padding: 12px;
+      margin: 6px 0;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       background: rgba(255,255,255,0.12);
       color: white;
       font-weight: bold;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
     .hidden { display:none; }
+    .event {
+      color: #ffd166;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -58,21 +56,22 @@
 
 <div class="game">
 
-  <!-- HUD -->
   <div class="header">
     💰 £<span id="money"></span> |
     📍 <span id="location"></span>
   </div>
+
+  <div id="eventBox" class="box hidden"></div>
 
   <!-- HOME -->
   <div id="homeScreen">
 
     <div class="box">
       <h3>📍 Travel</h3>
-      <button onclick="show('school')">🏫 School</button>
-      <button onclick="show('city')">🏙️ City</button>
-      <button onclick="show('festival')">🎡 Festival</button>
-      <button onclick="show('night')">🌙 Night</button>
+      <button onclick="travel('school')">🏫 School</button>
+      <button onclick="travel('city')">🏙️ City</button>
+      <button onclick="travel('festival')">🎡 Festival</button>
+      <button onclick="travel('night')">🌙 Night</button>
     </div>
 
     <div class="box">
@@ -85,46 +84,32 @@
   <!-- SCHOOL -->
   <div id="schoolScreen" class="hidden box">
     <h3>🏫 School Market</h3>
-
-    <button onclick="buy('choc','school')">Buy Chocolate (£<span id="sc_buy"></span>)</button>
-    <button onclick="sell('choc','school')">Sell Chocolate (£<span id="sc_sell"></span>)</button>
-
+    <button onclick="buy('choc')">Buy Chocolate (£<span id="sc_buy"></span>)</button>
+    <button onclick="sell('choc')">Sell Chocolate (£<span id="sc_sell"></span>)</button>
     <button onclick="back()">⬅ Back</button>
   </div>
 
   <!-- CITY -->
   <div id="cityScreen" class="hidden box">
     <h3>🏙️ City Market</h3>
-
-    <button onclick="buy('choc','city')">Buy Chocolate (£<span id="ci_buy"></span>)</button>
-    <button onclick="sell('choc','city')">Sell Chocolate (£<span id="ci_sell"></span>)</button>
-
-    <button onclick="buy('cookies','city')">Buy Cookies (£<span id="ci_buy2"></span>)</button>
-    <button onclick="sell('cookies','city')">Sell Cookies (£<span id="ci_sell2"></span>)</button>
-
+    <button onclick="buy('cookies')">Buy Cookies (£<span id="ci_buy"></span>)</button>
+    <button onclick="sell('cookies')">Sell Cookies (£<span id="ci_sell"></span>)</button>
     <button onclick="back()">⬅ Back</button>
   </div>
 
   <!-- FESTIVAL -->
   <div id="festivalScreen" class="hidden box">
     <h3>🎡 Festival Market</h3>
-
-    <button onclick="buy('lol','festival')">Buy Lollies (£<span id="fe_buy"></span>)</button>
-    <button onclick="sell('lol','festival')">Sell Lollies (£<span id="fe_sell"></span>)</button>
-
-    <button onclick="buy('rare','festival')">Buy Rare (£<span id="fe_buy2"></span>)</button>
-    <button onclick="sell('rare','festival')">Sell Rare (£<span id="fe_sell2"></span>)</button>
-
+    <button onclick="buy('lol')">Buy Lollies (£<span id="fe_buy"></span>)</button>
+    <button onclick="sell('lol')">Sell Lollies (£<span id="fe_sell"></span>)</button>
     <button onclick="back()">⬅ Back</button>
   </div>
 
   <!-- NIGHT -->
   <div id="nightScreen" class="hidden box">
     <h3>🌙 Night Market</h3>
-
-    <button onclick="buy('rare','night')">Buy Rare (£<span id="ni_buy"></span>)</button>
-    <button onclick="sell('rare','night')">Sell Rare (£<span id="ni_sell"></span>)</button>
-
+    <button onclick="buy('rare')">Buy Rare (£<span id="ni_buy"></span>)</button>
+    <button onclick="sell('rare')">Sell Rare (£<span id="ni_sell"></span>)</button>
     <button onclick="back()">⬅ Back</button>
   </div>
 
@@ -144,40 +129,101 @@ let inventory = {
   rare: 0
 };
 
-/* PRICE SYSTEM (DOPE WARS STYLE DIFFERENCE) */
-let prices = {
+/* BASE PRICES */
+let basePrices = {
   school:   { choc: 5 },
-  city:     { choc: 10, cookies: 15 },
-  festival: { lol: 20, rare: 60 },
-  night:    { rare: 120 }
+  city:     { cookies: 15 },
+  festival: { lol: 25 },
+  night:    { rare: 80 }
 };
 
-/* ================= SCREEN SYSTEM ================= */
+/* CURRENT MARKET PRICES */
+let prices = JSON.parse(JSON.stringify(basePrices));
+
+/* ================= DYNAMIC PRICES ================= */
+
+function updateMarket(){
+
+  for(let zone in basePrices){
+    for(let item in basePrices[zone]){
+
+      let base = basePrices[zone][item];
+
+      // random fluctuation ±60%
+      let multiplier = 0.6 + Math.random() * 0.8;
+
+      prices[zone][item] = Math.max(1, Math.floor(base * multiplier));
+    }
+  }
+}
+
+/* ================= EVENTS ================= */
+
+function triggerEvent(){
+
+  let roll = Math.random();
+
+  let msg = "";
+
+  if(roll < 0.2){
+    money += 20;
+    msg = "💰 Bonus cash drop!";
+  }
+  else if(roll < 0.4){
+    money = Math.max(0, money - 15);
+    msg = "⚠️ Theft in the market!";
+  }
+  else if(roll < 0.6){
+    msg = "📉 Market unstable...";
+  }
+  else if(roll < 0.8){
+    msg = "📈 Sugar boom happening!";
+  }
+  else {
+    msg = "🍬 Nothing unusual...";
+  }
+
+  let box = document.getElementById("eventBox");
+  box.classList.remove("hidden");
+  box.innerHTML = `<span class="event">${msg}</span>`;
+}
+
+/* ================= TRAVEL ================= */
+
+function travel(zone){
+  locationName = zone;
+
+  updateMarket();
+  triggerEvent();
+
+  show(zone);
+  updateUI();
+}
+
+/* ================= SCREEN ================= */
 
 function show(screen){
   hideAll();
   document.getElementById(screen + "Screen").classList.remove("hidden");
-  locationName = screen;
-  updateUI();
 }
 
 function back(){
   hideAll();
   document.getElementById("homeScreen").classList.remove("hidden");
-  locationName = "Home";
-  updateUI();
 }
 
 function hideAll(){
   document.querySelectorAll(".game > div").forEach(d=>{
-    if(d.id !== "homeScreen") d.classList.add("hidden");
+    if(d.id !== "homeScreen" && d.id !== "eventBox"){
+      d.classList.add("hidden");
+    }
   });
 }
 
 /* ================= ECONOMY ================= */
 
-function buy(item, zone){
-  let price = prices[zone][item];
+function buy(item){
+  let price = prices[locationName][item];
 
   if(money >= price){
     money -= price;
@@ -187,8 +233,8 @@ function buy(item, zone){
   updateUI();
 }
 
-function sell(item, zone){
-  let price = prices[zone][item];
+function sell(item){
+  let price = prices[locationName][item];
 
   if(inventory[item] > 0){
     money += price;
@@ -198,7 +244,7 @@ function sell(item, zone){
   updateUI();
 }
 
-/* ================= INVENTORY UI ================= */
+/* ================= INVENTORY ================= */
 
 function updateInventory(){
 
@@ -211,31 +257,26 @@ function updateInventory(){
   document.getElementById("inventory").innerHTML = html;
 }
 
-/* ================= PRICE DISPLAY ================= */
-
-function updatePrices(){
-  for(let zone in prices){
-    for(let item in prices[zone]){
-
-      let buyEl = document.getElementById(zone.slice(0,2)+"_buy");
-      let sellEl = document.getElementById(zone.slice(0,2)+"_sell");
-
-      // optional safe updates (we keep simple UI below)
-    }
-  }
-}
-
 /* ================= UI ================= */
 
 function updateUI(){
+
   document.getElementById("money").innerText = money;
   document.getElementById("location").innerText = locationName;
 
   updateInventory();
+
+  // update price display safely
+  for(let item in prices[locationName]){
+    let key = locationName.slice(0,2) + "_" + (item === "cookies" ? "buy" : "buy");
+    let el = document.getElementById(key);
+    if(el) el.innerText = prices[locationName][item];
+  }
 }
 
 /* ================= START ================= */
 
+updateMarket();
 updateUI();
 
 </script>
