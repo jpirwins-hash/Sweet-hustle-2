@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sweet Hustle v4.4</title>
+  <title>Sweet Hustle v5</title>
 
   <style>
     body {
@@ -19,7 +19,6 @@
       padding-bottom: 30px;
     }
 
-    /* TOP HUD */
     .header {
       position: sticky;
       top: 0;
@@ -29,32 +28,14 @@
       border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
-    .title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-
-    .hud {
-      font-size: 13px;
-      opacity: 0.9;
-    }
-
-    /* GLASS CARDS */
     .box {
       background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(10px);
       margin: 12px;
       padding: 14px;
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.1);
     }
 
-    h3 {
-      margin-top: 0;
-    }
-
-    /* BUTTONS (neutral game style) */
     button {
       width: 100%;
       padding: 12px;
@@ -70,21 +51,18 @@
       transform: scale(0.98);
     }
 
-    .good { background: rgba(46, 204, 113, 0.6); }
-    .bad { background: rgba(231, 76, 60, 0.6); }
-
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
 
-    .mission {
-      font-size: 13px;
-      opacity: 0.9;
-      line-height: 1.4;
+    .hidden {
+      display: none;
     }
 
+    .good { background: rgba(46,204,113,0.5); }
+    .bad { background: rgba(231,76,60,0.5); }
   </style>
 </head>
 
@@ -92,59 +70,69 @@
 
 <div class="game">
 
+  <!-- HEADER -->
   <div class="header">
-    <div class="title">🍭 Sweet Hustle</div>
-    <div class="hud">
-      💰 £<span id="money"></span> |
-      📅 Day <span id="day"></span> |
-      📍 <span id="location"></span>
+    💰 £<span id="money"></span> |
+    📅 Day <span id="day"></span> |
+    📍 <span id="location"></span>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div id="homeScreen">
+
+    <div class="box">
+      <h3>🏠 Travel</h3>
+      <button onclick="showScreen('school')">🏫 School</button>
+      <button onclick="showScreen('city')">🏙️ City</button>
+      <button onclick="showScreen('shop')">🏪 Shop</button>
+      <button onclick="showScreen('festival')">🎡 Festival</button>
     </div>
-    <div class="hud">
-      🏆 <span id="rank"></span>
+
+  </div>
+
+  <!-- SCHOOL -->
+  <div id="schoolScreen" class="hidden">
+
+    <div class="box">
+      <h3>🏫 School Market</h3>
+      <p>Cheap but low profit</p>
+
+      <button onclick="buy('choc','school')">🍫 Buy (£<span id="sc_choc"></span>)</button>
+      <button onclick="sell('choc','school')">Sell</button>
+
+      <button onclick="back()">⬅ Back</button>
     </div>
+
   </div>
 
-  <div class="box">
-    <h3>🧠 Missions</h3>
-    <div class="mission" id="missionText"></div>
-  </div>
+  <!-- CITY -->
+  <div id="cityScreen" class="hidden">
 
-  <div class="box">
-    <h3>📍 Travel</h3>
-    <div class="grid">
-      <button onclick="travel('School')">🏫 School</button>
-      <button onclick="travel('City')">🏙️ City</button>
-      <button onclick="travel('Shop')">🏪 Shop</button>
-      <button onclick="travel('Festival')">🎡 Festival</button>
+    <div class="box">
+      <h3>🏙️ City Market</h3>
+      <p>Balanced prices</p>
+
+      <button onclick="buy('choc','city')">🍫 Buy (£<span id="ci_choc"></span>)</button>
+      <button onclick="sell('choc','city')">Sell</button>
+
+      <button onclick="back()">⬅ Back</button>
     </div>
+
   </div>
 
-  <div class="box">
-    <h3>🍬 Trading</h3>
+  <!-- FESTIVAL -->
+  <div id="festivalScreen" class="hidden">
 
-    <button onclick="buy('choc')">Buy Chocolate 🍫</button>
-    <button onclick="sell('choc')">Sell Chocolate 🍫</button>
+    <div class="box">
+      <h3>🎡 Festival Market</h3>
+      <p>High risk, high reward</p>
 
-    <button onclick="buy('gum')">Buy Gummies 🍬</button>
-    <button onclick="sell('gum')">Sell Gummies 🍬</button>
+      <button onclick="buy('choc','festival')">🍫 Buy (£<span id="fe_choc"></span>)</button>
+      <button onclick="sell('choc','festival')">Sell</button>
 
-    <button onclick="buy('lol')">Buy Lollies 🍭</button>
-    <button onclick="sell('lol')">Sell Lollies 🍭</button>
+      <button onclick="back()">⬅ Back</button>
+    </div>
 
-    <button onclick="buy('rare')">Buy Rare ✨</button>
-    <button onclick="sell('rare')">Sell Rare ✨</button>
-  </div>
-
-  <div class="box">
-    <h3>🛠️ Upgrades</h3>
-    <button onclick="upgrade('storage')">📦 Storage</button>
-    <button onclick="upgrade('luck')">🍀 Luck</button>
-    <button onclick="upgrade('trade')">💹 Trade</button>
-  </div>
-
-  <div class="box">
-    <button class="good" onclick="nextDay()">➡️ Next Day</button>
-    <button class="bad" onclick="resetGame()">🔄 Reset</button>
   </div>
 
 </div>
@@ -153,113 +141,86 @@
 
 let money = 100;
 let day = 1;
-let locationName = "School";
-let rank = "Street Trader";
+let locationName = "Home";
 
-let inventory = { choc: 0, gum: 0, lol: 0, rare: 0 };
-let prices = { choc: 10, gum: 5, lol: 3, rare: 50 };
+let inventory = { choc: 0 };
 
-let mission = {
-  text: "Make £200",
-  reward: 100,
-  target: 200
+let prices = {
+  school: { choc: 5 },
+  city: { choc: 10 },
+  festival: { choc: 20 }
 };
 
-function rand(min,max){
-  return Math.floor(Math.random()*(max-min+1))+min;
+/* SCREEN SYSTEM */
+function showScreen(screen){
+
+  document.getElementById("homeScreen").classList.add("hidden");
+  document.getElementById("schoolScreen").classList.add("hidden");
+  document.getElementById("cityScreen").classList.add("hidden");
+  document.getElementById("festivalScreen").classList.add("hidden");
+
+  document.getElementById(screen + "Screen").classList.remove("hidden");
+
+  locationName = screen.charAt(0).toUpperCase() + screen.slice(1);
+
+  updateUI();
 }
 
-function marketModifier(loc){
-  if(loc==="School") return 0.8;
-  if(loc==="City") return 1.1;
-  if(loc==="Shop") return 0.9;
-  if(loc==="Festival") return 1.6;
-  return 1;
+/* BACK */
+function back(){
+  document.getElementById("schoolScreen").classList.add("hidden");
+  document.getElementById("cityScreen").classList.add("hidden");
+  document.getElementById("festivalScreen").classList.add("hidden");
+
+  document.getElementById("homeScreen").classList.remove("hidden");
+
+  locationName = "Home";
+  updateUI();
 }
 
-/* PRICE SYSTEM */
-function updatePrices(){
-  let mod = marketModifier(locationName);
+/* BUY */
+function buy(item, zone){
 
-  prices.choc = Math.max(1, rand(5,15)*mod);
-  prices.gum = Math.max(1, rand(2,10)*mod);
-  prices.lol = Math.max(1, rand(1,8)*mod);
-  prices.rare = Math.max(10, rand(30,120)*mod);
-}
+  let price = prices[zone][item];
 
-/* MISSIONS */
-function updateMission(){
-  if(money >= mission.target){
-    money += mission.reward;
-    mission.target += 300;
-    mission.reward += 50;
-
-    alert("🎯 Mission Complete! Reward given!");
-  }
-
-  document.getElementById("missionText").innerText =
-    "Goal: Reach £" + mission.target +
-    " | Reward: £" + mission.reward;
-}
-
-/* GAME ACTIONS */
-function buy(item){
-  if(money >= prices[item]){
-    money -= prices[item];
+  if(money >= price){
+    money -= price;
     inventory[item]++;
   }
+
   updateUI();
 }
 
-function sell(item){
+/* SELL */
+function sell(item, zone){
+
+  let price = prices[zone][item];
+
   if(inventory[item] > 0){
-    money += prices[item];
+    money += price;
     inventory[item]--;
   }
+
   updateUI();
-}
-
-function travel(loc){
-  locationName = loc;
-  updatePrices();
-  updateUI();
-}
-
-function upgrade(type){
-  if(type==="storage" && money>=200) money-=200;
-  if(type==="luck" && money>=300) money-=300;
-  if(type==="trade" && money>=400) money-=400;
-  updateUI();
-}
-
-function nextDay(){
-  day++;
-
-  updatePrices();
-
-  if(money>5000) rank="Sweet King";
-  else if(money>2000) rank="Dealer";
-  else if(money>500) rank="Trader";
-
-  updateMission();
-  updateUI();
-}
-
-function resetGame(){
-  location.reload();
 }
 
 /* UI */
 function updateUI(){
-  document.getElementById("money").innerText = Math.floor(money);
+
+  document.getElementById("money").innerText = money;
   document.getElementById("day").innerText = day;
   document.getElementById("location").innerText = locationName;
-  document.getElementById("rank").innerText = rank;
 
-  updateMission();
+  if(document.getElementById("sc_choc"))
+    document.getElementById("sc_choc").innerText = prices.school.choc;
+
+  if(document.getElementById("ci_choc"))
+    document.getElementById("ci_choc").innerText = prices.city.choc;
+
+  if(document.getElementById("fe_choc"))
+    document.getElementById("fe_choc").innerText = prices.festival.choc;
 }
 
-updatePrices();
 updateUI();
 
 </script>
